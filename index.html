@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Garment Archive</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#f5f2ed;color:#242522;font-family:Arial,sans-serif}
+
+header{padding:22px;border-bottom:1px solid #d4d0c9;display:flex;justify-content:space-between;align-items:center}
+
+.logo{font-family:Georgia,serif;font-size:23px}
+
+nav button{border:0;background:none;font-size:13px;padding:8px}
+
+main{max-width:850px;margin:auto;padding:24px}
+
+h1,h2{font-family:Georgia,serif;font-weight:normal}
+
+h1{font-size:clamp(42px,9vw,75px);line-height:1.05}
+
+p{line-height:1.6;color:#62625c}
+
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase}
+
+.hero{padding:55px 0;border-bottom:1px solid #d4d0c9}
+
+button.primary{background:#292d27;color:white;border:0;padding:15px 23px;cursor:pointer}
+
+section{padding:32px 0}
+
+.panel{background:white;border:1px solid #ddd9d2;padding:22px;margin-top:20px}
+
+label{display:block;font-size:12px;margin:17px 0 7px}
+
+input,textarea,select{width:100%;padding:13px;border:1px solid #ccc8c1;background:#fff;font-size:16px}
+
+textarea{min-height:100px}
+
+.preview{width:100%;max-height:300px;object-fit:contain;margin-top:14px;display:none}
+
+.case{padding:18px;border-bottom:1px solid #ddd9d2}
+
+.case strong{font-family:Georgia,serif;font-size:20px}
+
+small{color:#777}
+
+.hidden{display:none}
+
+footer{padding:25px;text-align:center;font-size:12px;color:#777}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">GARMENT ARCHIVE</div>
+
+<nav>
+
+<button onclick="show('research')">Research</button>
+
+<button onclick="show('archive')">Archive</button>
+
+</nav>
+
+</header>
+
+<main>
+
+<div class="hero">
+
+<div class="eyebrow">Fashion history / Research archive</div>
+
+<h1>Every garment<br>has a history.</h1>
+
+<p>Document, investigate, and preserve the stories behind vintage, designer, and contemporary clothing.</p>
+
+<button class="primary" onclick="show('research')">Begin Research</button>
+
+</div>
+
+<section id="research">
+
+<div class="eyebrow">New investigation</div>
+
+<h2>Research a garment</h2>
+
+<p>Create an evidence-based research case. Record what you know and what still needs verification.</p>
+
+<div class="panel">
+
+<label>Garment photograph</label>
+
+<input type="file" id="photo" accept="image/*">
+
+<img id="preview" class="preview" alt="Garment preview">
+
+<label>Garment name</label>
+
+<input id="name" placeholder="e.g. Vintage wool blazer">
+
+<label>Designer or manufacturer</label>
+
+<input id="brand" placeholder="Unknown">
+
+<label>Estimated production period</label>
+
+<input id="era" placeholder="e.g. 1980s">
+
+<label>Research status</label>
+
+<select id="status">
+
+<option>Unverified</option>
+
+<option>Possible identification</option>
+
+<option>Evidence-supported</option>
+
+<option>Verified</option>
+
+</select>
+
+<label>Evidence and research notes</label>
+
+<textarea id="notes" placeholder="Labels, construction details, sources, collection references..."></textarea>
+
+<br><br>
+
+<button class="primary" onclick="saveCase()">Save Research Case</button>
+
+</div>
+
+</section>
+
+<section id="archive" class="hidden">
+
+<div class="eyebrow">Personal collection</div>
+
+<h2>Research archive</h2>
+
+<p>Your saved garment investigations appear below.</p>
+
+<div id="cases"></div>
+
+</section>
+
+</main>
+
+<footer>GARMENT ARCHIVE — Fashion history, documented.</footer>
+
+<script>
+
+let photoData="";
+
+const photo=document.getElementById("photo");
+
+photo.addEventListener("change",function(){
+
+const file=this.files[0];
+
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(){
+
+photoData=reader.result;
+
+const img=document.getElementById("preview");
+
+img.src=photoData;
+
+img.style.display="block";
+
+};
+
+reader.readAsDataURL(file);
+
+});
+
+function show(page){
+
+document.getElementById("research").classList.toggle("hidden",page!=="research");
+
+document.getElementById("archive").classList.toggle("hidden",page!=="archive");
+
+if(page==="archive")render();
+
+document.getElementById(page).scrollIntoView({behavior:"smooth"});
+
+}
+
+function getCases(){
+
+try{return JSON.parse(localStorage.getItem("garmentCases")||"[]")}
+
+catch(e){return []}
+
+}
+
+function saveCase(){
+
+const name=document.getElementById("name").value.trim();
+
+if(!name){alert("Please enter a garment name.");return}
+
+const item={
+
+name,
+
+brand:document.getElementById("brand").value,
+
+era:document.getElementById("era").value,
+
+status:document.getElementById("status").value,
+
+notes:document.getElementById("notes").value,
+
+photo:photoData,
+
+date:new Date().toLocaleDateString()
+
+};
+
+const cases=getCases();
+
+cases.unshift(item);
+
+try{
+
+localStorage.setItem("garmentCases",JSON.stringify(cases));
+
+alert("Research case saved.");
+
+show("archive");
+
+}catch(e){
+
+alert("Unable to save. Try a smaller photograph.");
+
+}
+
+}
+
+function render(){
+
+const root=document.getElementById("cases");
+
+root.innerHTML="";
+
+const cases=getCases();
+
+if(!cases.length){root.textContent="No research cases yet.";return}
+
+cases.forEach(item=>{
+
+const div=document.createElement("div");
+
+div.className="case";
+
+const title=document.createElement("strong");
+
+title.textContent=item.name;
+
+div.appendChild(title);
+
+const details=document.createElement("p");
+
+details.textContent=[item.brand,item.era,item.status].filter(Boolean).join(" / ");
+
+div.appendChild(details);
+
+if(item.photo){
+
+const img=document.createElement("img");
+
+img.src=item.photo;
+
+img.style.cssText="max-width:180px;max-height:180px;object-fit:contain";
+
+div.appendChild(img);
+
+}
+
+const notes=document.createElement("p");
+
+notes.textContent=item.notes;
+
+div.appendChild(notes);
+
+const date=document.createElement("small");
+
+date.textContent=item.date;
+
+div.appendChild(date);
+
+root.appendChild(div);
+
+});
+
+}
+
+</script>
+
+</body>
+
+</html>
